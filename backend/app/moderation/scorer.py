@@ -76,7 +76,13 @@ class ConfidenceScorer:
                 "reasoning": reasoning,
             })
 
-            confidence = float(result.get("confidence", 0.0))
+            if not isinstance(result, dict):
+                return 0.0, f"Unexpected response format from LLM: {type(result)}"
+
+            try:
+                confidence = float(result.get("confidence", 0.0))
+            except (ValueError, TypeError):
+                confidence = 0.0
             factors = result.get("factors", "")
 
             # Clamp confidence to valid range

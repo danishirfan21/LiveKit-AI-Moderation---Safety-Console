@@ -31,4 +31,11 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()
+    settings = Settings()
+    if not settings.openai_api_key:
+        import os
+        settings.openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
+    if not settings.openai_api_key:
+        print("WARNING: OPENAI_API_KEY is not set. Moderation pipeline will fail.")
+    return settings

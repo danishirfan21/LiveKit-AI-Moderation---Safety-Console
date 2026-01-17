@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import type { WebSocketMessage, Room, Participant, ModerationDecision, AuditLogEntry } from '@/types';
-import { updateRoom } from '@/store/roomsSlice';
+import { updateRoom, updateParticipant } from '@/store/roomsSlice';
 import { addDecision } from '@/store/moderationSlice';
 import { addAuditEntry } from '@/store/auditSlice';
 
@@ -47,8 +47,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
             break;
 
           case 'participant:update':
-            // Handle participant updates through rooms slice
-            // (participants are nested in room context)
+            dispatch(updateParticipant(message.data as Participant));
             break;
 
           case 'moderation:decision':

@@ -59,8 +59,16 @@ class ContentClassifier:
             chain = self.prompt | self.llm | self.parser
             result = await chain.ainvoke({"content": content})
 
+            if not isinstance(result, dict):
+                return PolicyCategory.NONE, f"Unexpected response format from LLM: {type(result)}"
+
             # Map string to enum
-            category_str = result.get("category", "none").lower()
+            category_str = result.get("category", "none")
+            if category_str:
+                category_str = category_str.lower()
+            else:
+                category_str = "none"
+
             reasoning = result.get("reasoning", "")
 
             # Map to PolicyCategory enum
