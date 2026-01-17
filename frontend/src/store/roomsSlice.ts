@@ -71,6 +71,21 @@ const roomsSlice = createSlice({
     updateRoom: (state, action: PayloadAction<Room>) => {
       state.items[action.payload.room_id] = action.payload;
     },
+    updateParticipant: (state, action: PayloadAction<Participant>) => {
+      const participant = action.payload;
+      const roomId = participant.room_id;
+      if (!state.participants[roomId]) {
+        state.participants[roomId] = [];
+      }
+      const index = state.participants[roomId].findIndex(
+        (p) => p.participant_id === participant.participant_id
+      );
+      if (index !== -1) {
+        state.participants[roomId][index] = participant;
+      } else {
+        state.participants[roomId].push(participant);
+      }
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -123,7 +138,7 @@ const roomsSlice = createSlice({
   },
 });
 
-export const { setActiveRoom, updateRoom, clearError } = roomsSlice.actions;
+export const { setActiveRoom, updateRoom, updateParticipant, clearError } = roomsSlice.actions;
 
 // Selectors
 export const selectRooms = (state: { rooms: RoomsState }) => Object.values(state.rooms.items);
