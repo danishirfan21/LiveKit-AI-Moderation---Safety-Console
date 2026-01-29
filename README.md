@@ -72,6 +72,14 @@ npm run dev
 
 Open http://localhost:3000 to view the console.
 
+## Troubleshooting
+
+### Windows Path Issues (Ampersand & Spaces)
+
+If you encounter an error like `'Safety' is not recognized as an internal or external command` when running `npm run dev` on Windows, it is likely due to the ampersand (`&`) or spaces in your project directory path (e.g., `D:\LiveKit AI Moderation & Safety Console`).
+
+**Solution:** Rename the project directory to something without special characters or spaces, such as `livekit-moderation-console`, and try running the command again.
+
 ## Configuration
 
 ### Environment Variables (Backend)

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node -e \"if (process.cwd().includes('&')) { console.error('Error: Project path contains an ampersand (&). This causes issues on Windows. Please rename the folder to remove the ampersand and try again.'); process.exit(1); }\"",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
