@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node -e \"const cwd=process.cwd(); if (process.platform==='win32' && cwd.includes('&')) { console.error('Error: Project path contains an ampersand (&). On Windows, npm scripts run via cmd.exe, which treats & as a command separator. Move/rename the folder to remove &, or run from a subst drive, then try again.'); process.exit(1); }\"",
     "dev": "next dev",
+    "prebuild": "node -e \"const cwd=process.cwd(); if (process.platform==='win32' && cwd.includes('&')) { console.error('Error: Project path contains an ampersand (&). On Windows, npm scripts run via cmd.exe, which treats & as a command separator. Move/rename the folder to remove &, or run from a subst drive, then try again.'); process.exit(1); }\"",
     "build": "next build",
+    "prestart": "node -e \"const cwd=process.cwd(); if (process.platform==='win32' && cwd.includes('&')) { console.error('Error: Project path contains an ampersand (&). On Windows, npm scripts run via cmd.exe, which treats & as a command separator. Move/rename the folder to remove &, or run from a subst drive, then try again.'); process.exit(1); }\"",
     "start": "next start",
+    "prelint": "node -e \"const cwd=process.cwd(); if (process.platform==='win32' && cwd.includes('&')) { console.error('Error: Project path contains an ampersand (&). On Windows, npm scripts run via cmd.exe, which treats & as a command separator. Move/rename the folder to remove &, or run from a subst drive, then try again.'); process.exit(1); }\"",
     "lint": "next lint"
   },
   "dependencies": {

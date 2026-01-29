@@ -184,6 +184,23 @@ All decisions are logged before actions are executed for auditability.
 - **In-Memory Storage**: Data resets on restart
 - **OpenAI Required**: The moderation pipeline requires an OpenAI API key
 
+## Troubleshooting
+
+### Windows: frontend fails when folder path contains `&`
+
+If this repo lives in a directory that contains an ampersand (`&`) (for example: `LiveKit AI Moderation & Safety Console`), the frontend may fail to start on Windows because `npm` runs scripts through `cmd.exe`, which treats `&` as a command separator.
+
+Fix options:
+
+- Rename/move the repo folder to remove `&` from the path.
+- Or use a `subst` drive so the effective path has no `&`:
+
+  ```bat
+  subst X: "D:\LiveKit AI Moderation & Safety Console"
+  cd /d X:\frontend
+  npm run dev
+  ```
+
 ## License
 
 Internal use only.
