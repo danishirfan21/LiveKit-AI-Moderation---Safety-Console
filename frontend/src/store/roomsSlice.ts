@@ -26,7 +26,7 @@ export const fetchRooms = createAsyncThunk(
   async (status?: string) => {
     const rooms = await roomsApi.list(status);
     return rooms;
-  }
+  },
 );
 
 export const fetchRoomStats = createAsyncThunk(
@@ -34,7 +34,7 @@ export const fetchRoomStats = createAsyncThunk(
   async () => {
     const stats = await roomsApi.getStats();
     return stats;
-  }
+  },
 );
 
 export const fetchRoom = createAsyncThunk(
@@ -42,7 +42,7 @@ export const fetchRoom = createAsyncThunk(
   async (roomId: string) => {
     const room = await roomsApi.get(roomId);
     return room;
-  }
+  },
 );
 
 export const fetchRoomParticipants = createAsyncThunk(
@@ -50,7 +50,7 @@ export const fetchRoomParticipants = createAsyncThunk(
   async (roomId: string) => {
     const participants = await roomsApi.getParticipants(roomId);
     return { roomId, participants };
-  }
+  },
 );
 
 export const endRoom = createAsyncThunk(
@@ -58,7 +58,7 @@ export const endRoom = createAsyncThunk(
   async (roomId: string) => {
     await roomsApi.end(roomId);
     return roomId;
-  }
+  },
 );
 
 const roomsSlice = createSlice({
@@ -69,7 +69,46 @@ const roomsSlice = createSlice({
       state.activeRoomId = action.payload;
     },
     updateRoom: (state, action: PayloadAction<Room>) => {
-      state.items[action.payload.room_id] = action.payload;
+      const room = action.payload;
+      const existingRoom = state.items[room.room_id];
+      state.items[room.room_id] = room;
+
+      // Update aggregate stats in real-time
+      if (state.stats) {
+        if (!existingRoom) {
+          // New room created
+          state.stats.total_rooms += 1;
+          if (room.status === 'active') {
+            state.stats.active_rooms += 1;
+            state.stats.active_participants += room.participant_count;
+          } else {
+            state.stats.ended_rooms += 1;
+          }
+          state.stats.total_participants += room.participant_count;
+        } else {
+          // Existing room updated
+          if (existingRoom.status === 'active' && room.status === 'ended') {
+            state.stats.active_rooms -= 1;
+            state.stats.ended_rooms += 1;
+            state.stats.active_participants -= existingRoom.participant_count;
+          } else if (
+            existingRoom.status === 'ended' &&
+            room.status === 'active'
+          ) {
+            state.stats.active_rooms += 1;
+            state.stats.ended_rooms -= 1;
+            state.stats.active_participants += room.participant_count;
+          } else if (room.status === 'active') {
+            // Room stayed active, update participant count diff
+            const diff =
+              room.participant_count - existingRoom.participant_count;
+            state.stats.active_participants += diff;
+            if (diff > 0) {
+              state.stats.total_participants += diff;
+            }
+          }
+        }
+      }
     },
     updateParticipant: (state, action: PayloadAction<Participant>) => {
       const participant = action.payload;
@@ -78,7 +117,7 @@ const roomsSlice = createSlice({
         state.participants[roomId] = [];
       }
       const index = state.participants[roomId].findIndex(
-        (p) => p.participant_id === participant.participant_id
+        (p) => p.participant_id === participant.participant_id,
       );
       if (index !== -1) {
         state.participants[roomId][index] = participant;
@@ -110,45 +149,47 @@ const roomsSlice = createSlice({
       });
 
     // fetchRoomStats
-    builder
-      .addCase(fetchRoomStats.fulfilled, (state, action) => {
-        state.stats = action.payload;
-      });
+    builder.addCase(fetchRoomStats.fulfilled, (state, action) => {
+      state.stats = action.payload;
+    });
 
     // fetchRoom
-    builder
-      .addCase(fetchRoom.fulfilled, (state, action) => {
-        state.items[action.payload.room_id] = action.payload;
-      });
+    builder.addCase(fetchRoom.fulfilled, (state, action) => {
+      state.items[action.payload.room_id] = action.payload;
+    });
 
     // fetchRoomParticipants
-    builder
-      .addCase(fetchRoomParticipants.fulfilled, (state, action) => {
-        state.participants[action.payload.roomId] = action.payload.participants;
-      });
+    builder.addCase(fetchRoomParticipants.fulfilled, (state, action) => {
+      state.participants[action.payload.roomId] = action.payload.participants;
+    });
 
     // endRoom
-    builder
-      .addCase(endRoom.fulfilled, (state, action) => {
-        const room = state.items[action.payload];
-        if (room) {
-          room.status = 'ended';
-        }
-      });
+    builder.addCase(endRoom.fulfilled, (state, action) => {
+      const room = state.items[action.payload];
+      if (room) {
+        room.status = 'ended';
+      }
+    });
   },
 });
 
-export const { setActiveRoom, updateRoom, updateParticipant, clearError } = roomsSlice.actions;
+export const { setActiveRoom, updateRoom, updateParticipant, clearError } =
+  roomsSlice.actions;
 
 // Selectors
-export const selectRooms = (state: { rooms: RoomsState }) => Object.values(state.rooms.items);
+export const selectRooms = (state: { rooms: RoomsState }) =>
+  Object.values(state.rooms.items);
 export const selectActiveRooms = (state: { rooms: RoomsState }) =>
   Object.values(state.rooms.items).filter((room) => room.status === 'active');
 export const selectRoomById = (state: { rooms: RoomsState }, roomId: string) =>
   state.rooms.items[roomId];
-export const selectRoomStats = (state: { rooms: RoomsState }) => state.rooms.stats;
-export const selectRoomsLoading = (state: { rooms: RoomsState }) => state.rooms.loading;
-export const selectParticipants = (state: { rooms: RoomsState }, roomId: string) =>
-  state.rooms.participants[roomId] || [];
+export const selectRoomStats = (state: { rooms: RoomsState }) =>
+  state.rooms.stats;
+export const selectRoomsLoading = (state: { rooms: RoomsState }) =>
+  state.rooms.loading;
+export const selectParticipants = (
+  state: { rooms: RoomsState },
+  roomId: string,
+) => state.rooms.participants[roomId] || [];
 
 export default roomsSlice.reducer;
