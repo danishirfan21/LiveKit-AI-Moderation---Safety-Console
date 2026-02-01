@@ -216,7 +216,7 @@ async def simulate_content_event(
             room_id=content_event.room_id,
             room_name=f"Test Room {content_event.room_id[-6:]}",
             status=RoomStatus.ACTIVE,
-            participant_count=1,
+            participant_count=0,
         )
         await rooms_store.set(room.room_id, room)
         await broadcast_room_update(room.model_dump(mode="json"))
@@ -231,6 +231,11 @@ async def simulate_content_event(
             state=ParticipantState.ACTIVE,
         )
         await participants_store.set(participant.participant_id, participant)
+
+        # Update room participant count
+        room.participant_count += 1
+        await rooms_store.set(room.room_id, room)
+        await broadcast_room_update(room.model_dump(mode="json"))
         await broadcast_participant_update(participant.model_dump(mode="json"))
 
     # Create moderation input
