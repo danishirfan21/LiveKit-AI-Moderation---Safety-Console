@@ -69,7 +69,42 @@ const roomsSlice = createSlice({
       state.activeRoomId = action.payload;
     },
     updateRoom: (state, action: PayloadAction<Room>) => {
-      state.items[action.payload.room_id] = action.payload;
+      const room = action.payload;
+      const existingRoom = state.items[room.room_id];
+      state.items[room.room_id] = room;
+
+      // Update aggregate stats in real-time
+      if (state.stats) {
+        if (!existingRoom) {
+          // New room created
+          state.stats.total_rooms += 1;
+          if (room.status === 'active') {
+            state.stats.active_rooms += 1;
+            state.stats.active_participants += room.participant_count;
+          } else {
+            state.stats.ended_rooms += 1;
+          }
+          state.stats.total_participants += room.participant_count;
+        } else {
+          // Existing room updated
+          if (existingRoom.status === 'active' && room.status === 'ended') {
+            state.stats.active_rooms -= 1;
+            state.stats.ended_rooms += 1;
+            state.stats.active_participants -= existingRoom.participant_count;
+          } else if (existingRoom.status === 'ended' && room.status === 'active') {
+            state.stats.active_rooms += 1;
+            state.stats.ended_rooms -= 1;
+            state.stats.active_participants += room.participant_count;
+          } else if (room.status === 'active') {
+            // Room stayed active, update participant count diff
+            const diff = room.participant_count - existingRoom.participant_count;
+            state.stats.active_participants += diff;
+            if (diff > 0) {
+              state.stats.total_participants += diff;
+            }
+          }
+        }
+      }
     },
     updateParticipant: (state, action: PayloadAction<Participant>) => {
       const participant = action.payload;

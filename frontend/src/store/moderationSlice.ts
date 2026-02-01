@@ -72,7 +72,35 @@ const moderationSlice = createSlice({
   initialState,
   reducers: {
     addDecision: (state, action: PayloadAction<ModerationDecision>) => {
-      state.decisions[action.payload.decision_id] = action.payload;
+      const decision = action.payload;
+      const isNew = !state.decisions[decision.decision_id];
+      state.decisions[decision.decision_id] = decision;
+
+      // Update aggregate stats in real-time
+      if (state.stats && isNew) {
+        state.stats.total_decisions += 1;
+
+        // Update action counts
+        if (state.stats.by_action[decision.action] !== undefined) {
+          state.stats.by_action[decision.action] += 1;
+        } else {
+          state.stats.by_action[decision.action] = 1;
+        }
+
+        // Update classification counts
+        if (state.stats.by_classification[decision.classification] !== undefined) {
+          state.stats.by_classification[decision.classification] += 1;
+        } else {
+          state.stats.by_classification[decision.classification] = 1;
+        }
+
+        // Update status counts
+        if (state.stats.by_status[decision.status] !== undefined) {
+          state.stats.by_status[decision.status] += 1;
+        } else {
+          state.stats.by_status[decision.status] = 1;
+        }
+      }
     },
     setFilters: (state, action: PayloadAction<ModerationFilters>) => {
       state.filters = action.payload;
